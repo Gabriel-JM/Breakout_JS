@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="icon/blue-circle.ico" type="image/x-icon">
+    <title>Breakout</title>
+    <style>
+        body { background: #222; overflow: hidden; }
+        div { width: 80vw; margin: auto; }
+        canvas { border: 1px solid #222; border-radius: 5px; }
+        #level-container {
+            box-sizing: border-box;
+            position: absolute;
+            top: 0px;
+            left: 1px;
+            width: 9vw;
+            margin: 10px 6px;
+            padding: 10px 5px;
+            font-size: 24px;
+            background-color: rgba(240, 240, 240, 0.3);
+            text-align: center;
+            border-radius: 8px;
+        }
+        
+        #level-container > p {
+            margin: 0;
+            color:white;
+            font-family: monospace;
+        }
+        
+        #information {
+            width: 180px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            padding: 8px;
+            font-family: monospace;
+        }
+        #score { width: auto; }
+        #score h2 { margin: -5px 0 10px 0; font-size: 20pt; }
+        #numbers {
+            border: 1px solid;
+            border-radius: 3px;
+            font-size: 15pt;
+            margin: 0;
+            margin-bottom: 10px;
+            padding: 2px 5px 2px 6px;
+            height: 23px;
+        }
+        #lives {
+            position: absolute;
+            top: 5px;
+            left: 95px;
+            margin: 0;
+            font-size: 25px;
+            font-weight: bold;
+            color: #e2584d;
+        }
+        .lives-title {
+            padding: 0;
+            padding-bottom: 10px;
+            margin: 0;
+            margin-bottom: 10px;
+            margin-top: -5px;
+            font-size: 20pt;
+            border-bottom: 1px solid;
+        }
+        
+    </style>
+</head>
+
+<body>
+	<div><canvas width="1000" height="640"></canvas></div>
+    
+    <div id="level-container"><p id="level-title">Welcome!</p></div>
+    
+    <div id="information">
+        <h2 class="lives-title">Lives</h2><p id="lives"></p>
+        <div id="score">
+            <h2>Score</h2>
+            <p id="numbers">0</p>
+        </div>
+    </div>
+    
+	<script src="scripts/objects.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
