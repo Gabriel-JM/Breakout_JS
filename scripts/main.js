@@ -179,12 +179,7 @@
         posXSticky = Math.floor(pad.width/2) - ball.halfWidth();
         pad.x = (cnv.width/2)-70;
         
-        ball.x = pad.x + Math.floor(pad.width/2);
-        ball.y = pad.y - ball.height;
-        ball.speedX = 4;
-        ball.speedY = -4;
-        ball.angle = 1;
-        
+        resetBallStatus();
         buildBlocks();
         
         scorePoint = 0;
@@ -208,15 +203,19 @@
         posXSticky = Math.floor(pad.width/2) - ball.halfWidth();
         pad.x = (cnv.width/2)-70;
         
+        resetBallStatus();
+        
+        buildBlocks();
+        
+        gameState = GAMING;
+    }
+    
+    function resetBallStatus() {
         ball.x = pad.x + Math.floor(pad.width/2);
         ball.y = pad.y - ball.height;
         ball.speedX = 4;
         ball.speedY = -4;
         ball.angle = 1;
-        
-        buildBlocks();
-        
-        gameState = GAMING;
     }
     
     //Update Lives score
