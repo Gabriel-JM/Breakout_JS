@@ -33,7 +33,7 @@
     
     //Variables for levels
     let levelNum = 0
-    let levels = ["i2b5i2|1p1b3i1b3p1|1b9","b1","b1"] // Levels Design encoded
+    let levels = ["b1","b1","b1"] // Levels Design encoded
     let lvl = levels[levelNum]
     
     //Moviment Keys
@@ -55,7 +55,7 @@
     const loseBall = new Audio("sound/loseBall.mp3")
     loseBall.volume = 0.4
     const blockHit = new Audio("sound/blockHit.wav")
-    const indesHit = new Audio("sound/indestrucHit.wav")
+    const indesHit = new Audio("sound/IndestrucHit.wav")
     indesHit.volume = 0.6
     const winSong = new Audio("sound/Jingle_Win.wav")
     const loseSong = new Audio("sound/Jingle_Lose_00.mp3")
