@@ -46,6 +46,10 @@ const Ball = function(x, y, color, width, height) {
     Ball.prototype.halfWidth = function() {
         return this.width/2;
     }
+
+    Ball.prototype.getPosSticky = function(pad, ball) {
+        return Math.floor(pad.width/2) - ball.halfWidth()
+    }
 }
 
 const Block = function(x, y, type) {

@@ -10,10 +10,18 @@
     
     //Instance of the paddle and ball
     const pad = new Pad((cnv.width/2)-70, 610, "#ecc", 140, 20)
-    const ball = new Ball(pad.x + Math.floor(pad.width/2) - 10, pad.y - 20, "#eee", 20, 20)
     const ballImg = new Image()
     ballImg.src = "images/bolinha.png"
-    
+    let balls = [
+        new Ball(pad.x + Math.floor(pad.width/2) - 10, pad.y - 20, "#eee", 20, 20)
+    ]
+
+    //Array of blocks
+    let blocks = []
+
+    //Array of pills
+    let pills = []
+
     //Loading Pills Imagens
     const pillImg = new Image()
     let pillTypes = ["s","l","c","x","r","m","b"]
@@ -21,10 +29,9 @@
     //Variables for gaming control
     let scorePoint = 0
     let sticky = true
-    let posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
     let chain = 1
     let pointMultiplier = 1
-    let atualPower = ""
+    let currentPower = ""
     let powerClock = 0
     let lives = 3
     let lives_p = document.getElementById('lives')
@@ -33,7 +40,7 @@
     
     //Variables for levels
     let levelNum = 0
-    let levels = ["b1","b1","b1"] // Levels Design encoded
+    let levels = ["p2b5p2","b1","b1"] // Levels Design encoded
     let lvl = levels[levelNum]
     
     //Moviment Keys
@@ -85,27 +92,25 @@
         chainMessage.font = "italic bold 20px monospace"
         messages.push(chainMessage)
     
-    //Array of blocks
-    let blocks = []
-    
-    //Array of pills
-    let pills = []
+   
 
     //Key pressed event
 	window.addEventListener("keydown", function(e){
         var key = e.keyCode
-        switch(key) {
-            case LEFT:
-                mvLeft = true
-                mvRight = false
-                if(sticky) ball.speedX = -4
-            break
-            case RIGHT:
-                mvRight = true
-                mvLeft = false
-                if(sticky) ball.speedX = 4
-            break
-        }
+        balls.forEach(ball => {
+            switch(key) {
+                case LEFT:
+                    mvLeft = true
+                    mvRight = false
+                    if(sticky) ball.speedX = -4
+                break
+                case RIGHT:
+                    mvRight = true
+                    mvLeft = false
+                    if(sticky) ball.speedX = 4
+                break
+            }
+        })
 	})
 
     //Key released event
@@ -136,7 +141,7 @@
                     resetSong(winSong)
                     winMessage.setVisibility(false)
                     scoreMessage.setVisibility(false)
-                    nextLevel()
+                    nextLevel(balls[0])
                 } else if(gameState == OVER) {
                     resetSong(loseSong)
                     overMessage.setVisibility(false)
@@ -147,7 +152,7 @@
                         scoreMessage.setVisibility(false)
                         resetSong(winSong)
                     }
-                    reStart()
+                    reStart(balls[0])
                 } else {
                     gameState = GAMING
                     pauseMessage.setVisibility(false)
@@ -159,7 +164,7 @@
     buildBlocks()
     
     //Game restart function (without reload the page)
-    function reStart() {
+    function reStart(ball) {
         pills = []
         blocks = []
         pointMultiplier = 1
@@ -169,14 +174,14 @@
         lives_p.innerHTML = lives
         level_p.innerHTML = "Level " + (levelNum+1)
         pad.width = pad.widthOriginal
-        atualPower = -1
+        currentPower = -1
         powerClock = 0
         
         sticky = true
         posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
         pad.x = (cnv.width/2)-70
         
-        resetBallStatus()
+        resetBallStatus(ball)
         buildBlocks()
         
         scorePoint = 0
@@ -193,21 +198,21 @@
         pointMultiplier = 1
         chain = 1
         chainMessage.text = "Chain: " + chain
-        atualPower = -1
+        currentPower = -1
         powerClock = 0
         
         sticky = true
-        posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
+        posXSticky = Math.floor(pad.width/2) - balls[0].halfWidth()
         pad.x = (cnv.width/2)-70
         
-        resetBallStatus()
+        resetBallStatus(balls[0])
         
         buildBlocks()
         
         gameState = GAMING
     }
     
-    function resetBallStatus() {
+    function resetBallStatus(ball) {
         ball.x = pad.x + Math.floor(pad.width/2)
         ball.y = pad.y - ball.height
         ball.speedX = 4
@@ -248,7 +253,7 @@
     }
     
     //Set the angle of the ball
-    function setAngle(angle) {
+    function setAngle(ball, angle) {
         ball.angle = angle
         
         if(angle === 2) {
@@ -264,14 +269,14 @@
     }
     
     //Wall hitted
-    function wallHitted() {
+    function wallHitted(ball) {
         wallHit.currentTime = 0
         wallHit.play()
         if(!ball.hitable) { ball.hitable = true }
     }
     
     //Collision of the ball with the pad
-    function padCollision() {
+    function padCollision(ball) {
         //Check if the ball can be hitted (Prevent a bug, which the ball become imprisoned in the paddle)
         if(ball.hitable) {
             //Collision of the ball with left and right sides of the pad
@@ -284,7 +289,7 @@
 
             //Collision of the ball with the top and bottom sides of the pad
             if(upDownCollision(ball, pad)) {
-                if(atualPower=="c") {
+                if(currentPower=="c") {
                     sticky = true
                 } else {
                     chain = 1
@@ -296,9 +301,9 @@
                     //Change Angle
                     if(Math.abs(pad.padSpeed) > 4) {
                         if(Math.sign(pad.padSpeed) === Math.sign(ball.speedX)) {
-                            setAngle(Math.max(0, Math.min(ball.angle-1, 2)))
+                            setAngle(ball, Math.max(0, Math.min(ball.angle-1, 2)))
                         } else {
-                            setAngle(Math.max(0, Math.min(ball.angle+1, 2)))
+                            setAngle(ball, Math.max(0, Math.min(ball.angle+1, 2)))
                         }
                     }
                 }
@@ -307,15 +312,15 @@
     }
     
     //Check which is the type pf the block
-    function checkBlockType(block) {
+    function checkBlockType(ball, block) {
         if(block.type != "i") {
-            destroyBlock(block, true)
+            destroyBlock(ball, block, true)
             if(block.type == "e") {
                 checkExplosions(block)
             } else if(block.type == "p") {
-                spawnPill(block.x, block.y, pillTypes[Math.floor(Math.random() * pillTypes.length)])
+                spawnPill(block.x, block.y, 'b'/*pillTypes[Math.floor(Math.random() * pillTypes.length)]*/)
             }
-            return (atualPower == "m")? false : true
+            return (currentPower == "m")? false : true
         } else if(block.type == "i") {
             indesHit.currentTime = 0
             indesHit.play()
@@ -342,8 +347,8 @@
     
     //Deal with which type of pills was picked up and it does
     function pillEffect(t) {
-        atualPower = t
-        switch(atualPower) {
+        currentPower = t
+        switch(currentPower) {
             case "s":
                 //Slow down
                 powerClock = 900
@@ -360,50 +365,55 @@
             case "x":
                 //Expand
                 pad.width = Math.floor(pad.widthOriginal * 1.5)
-                posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
+                posXSticky = Math.floor(pad.width/2) - balls[0].halfWidth()
                 powerClock = 800
                 break
             case "r":
                 //Reduce
                 pointMultiplier = 2
                 pad.width = Math.floor(pad.widthOriginal / 2)
-                posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
+                posXSticky = Math.floor(pad.width/2) - balls[0].halfWidth()
                 powerClock = 800
                 break
             case "m":
                 //Megaball
                 powerClock = 800
-                ball.dmg = 2
+                balls.forEach(ball => ball.dmg = 2)
                 break
             case "b":
                 //MultiBall
-                powerClock = 0
+                powerClock = 800
+                balls.push(new Ball(pad.x + Math.floor(pad.width/2) - 10, pad.y - 20, "#eee", 20, 20))
                 break
             default:
-                console.log("Erro!!! Tipo incompativel: " + atualPower)
+                console.log("Erro!!! Tipo incompativel: " + currentPower)
         }
     }
     
     //Reset the effect of the power of the pill
-    function resetPower(){
-        switch(atualPower) {
+    function resetPower() {
+        switch(currentPower) {
             case "c":
-                posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
+                posXSticky = Math.floor(pad.width/2) - balls[0].halfWidth()
                 break
             case "x":
             case "r":
                 pad.width = pad.widthOriginal
-                posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
+                posXSticky = Math.floor(pad.width/2) - balls[0].halfWidth()
                 pointMultiplier = 1
                 break
             case "m":
-                ball.dmg = 1
+                balls.forEach(ball => ball.dmg = 1)
+                break
+            case "b":
+                balls = [new Ball(pad.x + Math.floor(pad.width/2) - 10, pad.y - 20, "#eee", 20, 20)]
+                break
         }
-        atualPower=""
+        currentPower=""
     }
     
     //Deal with the result of the impact of the ball with the block
-    function destroyBlock(b, combo) {
+    function destroyBlock(ball, b, combo) {
         b.hp -= ball.dmg
         scorePoint += b.point * chain * pointMultiplier
         score.innerHTML = scorePoint
@@ -419,47 +429,46 @@
     //Collision in up and down between two objects
     function upDownCollision(obj1, obj2) {
         if(obj1.visible && obj2.visible) {
-            if(obj1.x + obj1.width > obj2.x && obj1.x < obj2.x + obj2.width && obj1.y + obj1.height + obj1.speedY > obj2.y && obj1.y + obj1.speedY < obj2.y + obj2.height) return true
+            return (obj1.x + obj1.width > obj2.x && obj1.x < obj2.x + obj2.width && obj1.y + obj1.height + obj1.speedY > obj2.y && obj1.y + obj1.speedY < obj2.y + obj2.height)
         }
     }
     
     //Collision in left and right between two objects
     function leftRightCollision(obj1,obj2) {
         if(obj1.visible && obj2.visible) {
-            if(obj1.x + obj1.width + obj1.speedX > obj2.x && obj1.x + obj1.speedX < obj2.x + obj2.width && obj1.y + obj1.height > obj2.y && obj1.y < obj2.y +obj2.height) return true
+            return (obj1.x + obj1.width + obj1.speedX > obj2.x && obj1.x + obj1.speedX < obj2.x + obj2.width && obj1.y + obj1.height > obj2.y && obj1.y < obj2.y +obj2.height)
         }
     }
     
     //Remove object from an array
     function removeObjects(objectsToRemove, array) {
-        var i = array.indexOf(objectsToRemove)
+        const i = array.indexOf(objectsToRemove)
         if(i !== -1) {
-            array.slice(i, 1)
+           return array.slice(i, 1)
         }
     }
     
     //Deal with the ball repeling
-    function ballRepel(direction) {
+    function ballRepel(ball, direction) {
         ball.hitable = (!ball.hitable) ? true : ball.hitable
         ball[direction] *= -1
-    }
-    
-    //Render Bricks
-    function renderBlocks(blck) {
-        if(blck.visible && gameState != START) {
-            ctx.fillStyle = blck.color
-            ctx.fillRect(blck.x, blck.y, blck.width, blck.height)
-        }
     }
     
     //Render Pills
     function renderPills(pill) {
         if(pill.visible && gameState != START) {
-            for(let i in pillTypes) {
-                let pt = pillTypes[i]
+            for(let pt of pillTypes) {
                 if(pill.type==pt) pillImg.src = pill.src
             }
             ctx.drawImage(pillImg,0, 0, pill.width, pill.height,pill.x, pill.y, pill.width, pill.height)
+        }
+    }
+
+    //Render Bricks
+    function renderBlocks(blck) {
+        if(blck.visible && gameState != START) {
+            ctx.fillStyle = blck.color
+            ctx.fillRect(blck.x, blck.y, blck.width, blck.height)
         }
     }
     
@@ -472,18 +481,9 @@
             ctx.fillText(msg.text, msg.x, msg.y)
         }
     }
-	
-    //Main loop function
-	function loop() {
-		requestAnimationFrame(loop, cnv)
-        if(gameState == GAMING) {
-            update()   
-        }
-		render()
-	}
     
     //Draw a line that shows which direction will goes the ball when it's sticky in the paddle
-    function drawStickyBallLine() {
+    function drawStickyBallLine(ball) {
         if(sticky) {
             ctx.lineWidth = 2
             ctx.lineCap = "round"
@@ -502,28 +502,50 @@
             }
         }
     }
+    
+    //Move the ball accordingly to the current power
+    function moveBall(ball) {
+        if(currentPower=="s") {
+            ball.nextX = ball.x + (ball.speedX/1.8)
+            ball.nextY = ball.y + (ball.speedY/1.8)
+        } else {
+            ball.nextX = ball.x + ball.speedX
+            ball.nextY = ball.y + ball.speedY
+        }
+    }
+    
+    //Collision Screen and Ball
+    function screenLimits(ball) {
+        if(ball.nextX + ball.width > cnv.width || ball.nextX < 0) {
+            ball.nextX = Math.max(0 ,Math.min((cnv.width) - ball.width, ball.nextX))
+            ball.speedX = -ball.speedX
+            wallHitted(ball)
+        } else if(ball.nextY < 0) {
+            ball.nextY = Math.max(0, ball.nextY)
+            ball.speedY = -ball.speedY
+            wallHitted(ball)
+        }
+    }
+
+    function drawBall(ball) {
+        ctx.drawImage(ballImg,
+            0, 0, ball.width, ball.height,
+            ball.x, ball.y, ball.width, ball.height
+        )
+    }
+	
+    //Main loop function
+	function loop() {
+		requestAnimationFrame(loop, cnv)
+        if(gameState == GAMING) {
+            update()   
+        }
+		render()
+	}
 
     //Game update function
 	function update() {
         if(gameState == GAMING) {
-            if(atualPower=="s") {
-                ball.nextX = ball.x + (ball.speedX/1.8)
-                ball.nextY = ball.y + (ball.speedY/1.8)
-            } else {
-                ball.nextX = ball.x + ball.speedX
-                ball.nextY = ball.y + ball.speedY
-            }
-            //Collision Screen and Ball
-            if(ball.nextX + ball.width > cnv.width || ball.nextX < 0) {
-                ball.nextX = Math.max(0 ,Math.min((cnv.width) - ball.width, ball.nextX))
-                ball.speedX = -ball.speedX
-                wallHitted()
-            } else if(ball.nextY < 0) {
-                ball.nextY = Math.max(0, ball.nextY)
-                ball.speedY = -ball.speedY
-                wallHitted()
-            }
-            
             //Move Pad
             if(mvRight) {
                 pad.padSpeed = 5
@@ -537,7 +559,7 @@
             pad.x = Math.max(4 ,Math.min((cnv.width - 4) - pad.width, pad.x))
             
             //Falling of the pills and deleting
-            pills.forEach(function(pill) {
+            pills.forEach(pill => {
                 if(upDownCollision(pill, pad) || leftRightCollision(pill, pad)) {
                     pickPowerUp.play()
                     pillEffect(pill.type)
@@ -551,7 +573,7 @@
             });
             
             //Run out the power up duration
-            if(atualPower!="l" && atualPower!="") {
+            if(currentPower !="l" && currentPower != "") {
                 powerClock -= 1
                 if(powerClock<=0) {
                     resetPower()
@@ -559,68 +581,76 @@
             }
             
             //Start position of the ball
-            if(sticky) {
-                ball.x = pad.x + posXSticky
-                ball.y = pad.y - ball.height
-                ball.speedY = -4
-            } else {
-                //Update Ball direction
-                ball.x = ball.nextX
-                ball.y = ball.nextY
+            balls.forEach(ball => {
+                let posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
 
-                //Collision Pad and Ball
-                padCollision()
+                if(sticky) {
+                    ball.x = pad.x + posXSticky
+                    ball.y = pad.y - ball.height
+                    ball.speedY = -4
+                } else if(ball.visible) {
+                    moveBall(ball)
+                    screenLimits(ball)
 
-                //Collision Ball and Blocks
-                for(let i in blocks) {
-                    let b = blocks[i]
-                    if(upDownCollision(ball, b) && checkBlockType(b)) ballRepel("speedY")
-                    else if(leftRightCollision(ball, b) && checkBlockType(b)) ballRepel("speedX")
-                }
+                    //Update Ball direction
+                    ball.x = ball.nextX
+                    ball.y = ball.nextY
 
-                //Ball out of Screen
-                if(ball.y + 10 > cnv.height) {
-                    if(lives == 0) {
-                        gameState = OVER
-                        loseSong.play()
-                        overMessage.setVisibility(true)
-                        scoreMessage.text = "Level "+ (levelNum+1) +" Score: " + scorePoint
+                    //Collision Pad and Ball
+                    padCollision(ball)
+
+                    //Collision Ball and Blocks
+                    for(let b of blocks) {
+                        if(upDownCollision(ball, b) && checkBlockType(ball, b))
+                            ballRepel(ball, "speedY")
+                        else if(leftRightCollision(ball, b) && checkBlockType(ball, b))
+                            ballRepel(ball, "speedX")
+                    }
+
+                    //counting invisible blocks
+                    let normalCount = 0
+                    let indestruCount = 0
+                    for(let blck of blocks) {
+                        if(!blck.visible) {
+                            normalCount++
+                        } else if(blck.visible && blck.type == "i") {
+                            indestruCount++
+                        }
+                    }
+
+                    //Checking if all blocks were destroyed and show win's message
+                    if(normalCount == (blocks.length - indestruCount)) {
+                        winMessage.setVisibility(true)
+                        scoreMessage.text = "Level "+ (levelNum+1)+ " Score: " + scorePoint
                         scoreMessage.setVisibility(true)
-                    } else {
-                        chain = 1
-                        chainMessage.text = "Chain: " + chain
-                        updateLives(-1)
-                        loseBall.play()
-                        sticky = true
-                        posXSticky = Math.floor(pad.width/2) - ball.halfWidth()
-                        ball.speedX = 4
-                        ball.speedY = -4
+                        
+                        gameState = NEXTLEVEL
+                        levelNum = (levels[levelNum+1] != undefined)? ++levelNum : levelNum = 0
+                        winSong.play()
+                    }
+
+                    //Ball out of Screen
+                    if(ball.y + 10 > cnv.height) {
+                        if(lives == 0 && balls.length == 1) {
+                            gameState = OVER
+                            loseSong.play()
+                            overMessage.setVisibility(true)
+                            scoreMessage.text = `Level ${levelNum+1} - Score: ${scorePoint}`
+                            scoreMessage.setVisibility(true)
+                        } else {
+                            chain = 1
+                            chainMessage.text = "Chain: " + chain
+                            updateLives(-1)
+                            loseBall.play()
+                            sticky = true
+                            ball.speedX = 4
+                            ball.speedY = -4
+                            powerClock = 0
+
+                        }
                     }
                 }
-
-                //counting invisible blocks
-                let normalCount = 0
-                let indestruCount = 0
-                for(let i in blocks) {
-                    let blck = blocks[i]
-                    if(!blck.visible) {
-                        normalCount++
-                    } else if(blck.visible && blck.type == "i") {
-                        indestruCount++
-                    }
-                }
-
-                //Checking if all blocks were destroyed and show win's message
-                if(normalCount == (blocks.length - indestruCount)) {
-                    winMessage.setVisibility(true)
-                    scoreMessage.text = "Level "+ (levelNum+1)+ " Score: " + scorePoint
-                    scoreMessage.setVisibility(true)
-                    
-                    gameState = NEXTLEVEL
-                    levelNum = (levels[levelNum+1] != undefined)? ++levelNum : levelNum = 0
-                    winSong.play()
-                }
-            }
+            })
         }
 	}
 
@@ -639,13 +669,12 @@
             ctx.fillRect(pad.x, pad.y, pad.width, pad.height)
             
             //Draw the ball
-            ctx.drawImage(ballImg,
-                0, 0, ball.width, ball.height,
-                ball.x, ball.y, ball.width, ball.height
-            )
+            balls.forEach(ball => {
+                drawBall(ball)
+                //Draws the direction line
+                drawStickyBallLine(ball)
+            })
             
-            //Draws the direction line
-            drawStickyBallLine()
             chainMessage.setVisibility(true)
             
         } else {
@@ -660,7 +689,7 @@
         }
         
         //Show blocks if has one and it's visible
-        if(blocks !== 0) blocks.forEach(renderBlocks)
+        if(blocks !== 0) blocks.forEach(block => renderBlocks(block))
         
         //Show pills if has one and it's visible
         if(pills !== 0) pills.forEach(renderPills)
